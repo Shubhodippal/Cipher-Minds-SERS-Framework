@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="audio_feature_extractor",
+    name="atest",
     version="0.1.0",
     description="A package for extracting audio features with data augmentation.",
     author="Shubhodip Pal",
