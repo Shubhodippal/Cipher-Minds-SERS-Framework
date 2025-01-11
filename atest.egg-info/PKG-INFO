@@ -1,7 +1,0 @@
-Metadata-Version: 2.1
-Name: atest
-Version: 0.1.0
-Summary: A package for extracting audio features with data augmentation.
-Author: Shubhodip Pal
-Author-email: shubhodippal01@gmail.com
-Requires-Python: >=3.9, <3.13
