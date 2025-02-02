@@ -1,6 +1,6 @@
 import librosa
 import numpy as np
-import augmentation as ag
+from .import augmentation as ag
 
 def extract_features(data, sample_rate):
     # ZCR
