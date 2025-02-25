@@ -8,10 +8,10 @@ setup(
     author_email="shubhodippal01@gmail.com",
     packages=find_packages(),
     install_requires=[
-        "numpy==2.0.2",
-        "librosa==0.10.2.post1",
-        "pandas==2.2.3",
+        "numpy==1.23.5",
+        "librosa==0.10.1",
+        "pandas==1.5.3",
         "tqdm==4.67.1"
     ],
-    python_requires=">=3.9, <3.13",
+    python_requires=">=3.9, <3.12",
 )
