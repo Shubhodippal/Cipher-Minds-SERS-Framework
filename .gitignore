@@ -4,3 +4,9 @@ B_data_frame.ipynb
 banspemo_df.csv
 B_data_frame.ipynb
 B_Data_Frame.xlsx
+df_c.py
+Confusion_matrix.csv
+onehot_encoder.pkl
+report.csv
+scaler.pkl
+saved_models/audio_classification.hdf5
