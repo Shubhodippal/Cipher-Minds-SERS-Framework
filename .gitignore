@@ -10,3 +10,5 @@ onehot_encoder.pkl
 report.csv
 scaler.pkl
 saved_models/audio_classification.hdf5
+data/
+

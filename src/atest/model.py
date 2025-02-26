@@ -1,32 +1,20 @@
-import keras
-from keras.callbacks import ReduceLROnPlateau
-from keras.models import Sequential
-from keras.layers import Dense, Conv1D, MaxPooling1D, Flatten, Dropout, BatchNormalization
-from keras.utils import to_categorical
-from keras.callbacks import ModelCheckpoint
-
-import seaborn as sns
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import os
-import sys
 import joblib
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from sklearn.metrics import confusion_matrix, classification_report
 
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, BatchNormalization, MaxPooling1D, Dropout, GlobalAveragePooling1D, Dense
-from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
 
 
-def model_architecture(x_train, y_train, x_test, y_test,batch_size=64, epochs=100, output_shape=7, optimizer='RMSprop'):
-
-    
-    input_shape = (x_train.shape[1], 1)
-
+def build_model(input_shape, output_shape):
     model = Sequential([
         # First Conv1D Layer
         Conv1D(256, kernel_size=9, strides=1, padding='same', activation='relu', kernel_regularizer=l2(0.0001), input_shape=input_shape),
@@ -67,62 +55,81 @@ def model_architecture(x_train, y_train, x_test, y_test,batch_size=64, epochs=10
         # Output layer
         Dense(output_shape, activation='softmax')
     ])
+    return model
 
-    # Compile the model
+
+def compile_model(model, optimizer):
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
-    # Callbacks
-    checkpointer = ModelCheckpoint(filepath='saved_models/audio_classification.hdf5', verbose=1, save_best_only=True)
+
+def train_model(model, x_train, y_train, x_test, y_test, batch_size, epochs, folder_name):
+    checkpointer = ModelCheckpoint(filepath=os.path.join(folder_name, 'audio_classification.hdf5'), verbose=1, save_best_only=True)
     rlrp = ReduceLROnPlateau(monitor='val_loss', factor=0.5, verbose=1, patience=5, min_lr=1e-7)
 
-    print(model.summary())
+    history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test), callbacks=[rlrp, checkpointer])
+    return history
 
-    # Train the model
-    history=model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test), callbacks=[rlrp, checkpointer])
 
-    print("Accuracy of our model on test data : " , model.evaluate(x_test,y_test)[1]*100 , "%")
+def evaluate_model(model, x_test, y_test):
+    accuracy = model.evaluate(x_test, y_test)[1] * 100
+    print("Accuracy of our model on test data: ", accuracy, "%")
+    return accuracy
 
-    epochs = [i for i in range(100)]
-    fig , ax = plt.subplots(1,2)
+
+def plot_metrics(history, epochs, folder_name):
+    epochs_range = range(epochs)
+    fig, ax = plt.subplots(1, 2)
     train_acc = history.history['accuracy']
     train_loss = history.history['loss']
     test_acc = history.history['val_accuracy']
     test_loss = history.history['val_loss']
 
-    fig.set_size_inches(20,6)
-    ax[0].plot(epochs , train_loss , label = 'Training Loss')
-    ax[0].plot(epochs , test_loss , label = 'Testing Loss')
+    fig.set_size_inches(20, 6)
+    ax[0].plot(epochs_range, train_loss, label='Training Loss')
+    ax[0].plot(epochs_range, test_loss, label='Testing Loss')
     ax[0].set_title('Training & Testing Loss')
     ax[0].legend()
     ax[0].set_xlabel("Epochs")
 
-    ax[1].plot(epochs , train_acc , label = 'Training Accuracy')
-    ax[1].plot(epochs , test_acc , label = 'Testing Accuracy')
+    ax[1].plot(epochs_range, train_acc, label='Training Accuracy')
+    ax[1].plot(epochs_range, test_acc, label='Testing Accuracy')
     ax[1].set_title('Training & Testing Accuracy')
     ax[1].legend()
     ax[1].set_xlabel("Epochs")
-    plt.show()
+    plt.savefig(os.path.join(folder_name, 'training_testing_metrics.png'))
 
-    # predicting on test data.
-    encoder = joblib.load("onehot_encoder.pkl")
+
+def save_confusion_matrix_and_report(model, x_test, y_test, folder_name):
+    encoder = joblib.load(os.path.join(folder_name, "onehot_encoder.pkl"))
     pred_test = model.predict(x_test)
     y_pred = encoder.inverse_transform(pred_test)
-
     y_test = encoder.inverse_transform(y_test)
 
     cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize = (12, 10))
-    cm = pd.DataFrame(cm , index = [i for i in encoder.categories_] , columns = [i for i in encoder.categories_])
+    plt.figure(figsize=(12, 10))
+    cm = pd.DataFrame(cm, index=[i for i in encoder.categories_], columns=[i for i in encoder.categories_])
     sns.heatmap(cm, linecolor='white', cmap='Blues', linewidth=1, annot=True, fmt='')
     plt.title('Confusion Matrix', size=20)
     plt.xlabel('Predicted Labels', size=14)
     plt.ylabel('Actual Labels', size=14)
-    plt.show()
+    plt.savefig(os.path.join(folder_name, 'confusion_matrix.png'))
 
-    cm.to_csv('Confusion_matrix.csv')
+    cm.to_csv(os.path.join(folder_name, 'Confusion_matrix.csv'))
 
-    print(classification_report(y_test, y_pred))
     report = classification_report(y_test, y_pred)
-
-    with open('report.csv', 'w') as file:
+    print(report)
+    with open(os.path.join(folder_name, 'report.csv'), 'w') as file:
         file.write(report)
+
+
+def model_architecture(x_train, y_train, x_test, y_test, batch_size=64, epochs=100, output_shape=7, optimizer='RMSprop', folder_name="data"):
+    input_shape = (x_train.shape[1], 1)
+    model = build_model(input_shape, output_shape)
+    model = compile_model(model, optimizer)
+    print(model.summary())
+
+    history = train_model(model, x_train, y_train, x_test, y_test, batch_size, epochs, folder_name)
+    evaluate_model(model, x_test, y_test)
+    plot_metrics(history, epochs, folder_name)
+    save_confusion_matrix_and_report(model, x_test, y_test, folder_name)
