@@ -1,4 +1,3 @@
-```markdown
 # Audio Emotion Recognition
 
 ## Overview
@@ -63,5 +62,4 @@ This will:
 - Fine-tuning hyperparameters
 - Expanding dataset for better generalization
 - Implementing real-time emotion detection
-```
 
