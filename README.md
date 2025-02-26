@@ -12,18 +12,24 @@ This project is an Audio Emotion Recognition system that processes audio files, 
 
 ## File Structure
 ```
-├── augmentation.py       # Data augmentation functions
-├── data_processing.py    # Feature extraction and data preprocessing
-├── feature_extraction.py # Extracts features from audio files
-├── model.py              # CNN model for audio classification
-├── __init__.py           # Module initialization
-├── test.py               # Script to run the entire pipeline
+Project/
+├── [setup.py]
+├── README.md
+├── LICENSE
+├── [requirements.txt]
+└── src/
+    ├── atest/
+    │   ├── __init__.py
+    │   ├── data_processing.py
+    │   ├── feature_extraction.py
+    │   ├── model.py
+    └── [test.py]
 ```
 
 ## Requirements
 Install the required dependencies using:
 ```bash
-pip install numpy pandas librosa joblib scikit-learn tensorflow tqdm matplotlib seaborn
+pip install -r requirements.txt
 ```
 
 ## How to Run
